@@ -25,4 +25,4 @@ jobs:
           context: ./
           file: ./Dockerfile
           push: true
-          tags: docker login  -u devimaheswari/test1:latest
+          tags: devimaheswari/test1:latest
