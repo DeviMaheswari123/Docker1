@@ -24,13 +24,18 @@ jobs:
         echo "Waiting for the server to start..."
         sleep 10
 
+    - name: Check Docker container status
+      run: docker ps -a
+
     - name: Check Docker container logs
       run: docker logs my-python-app-container
 
     - name: Test application
       run: |
+        echo "Testing the application"
         curl -v http://localhost:5000
 
     - name: Stop and remove Docker container
       run: docker rm -f my-python-app-container
+
 
