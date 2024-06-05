@@ -1,7 +1,10 @@
-name: Build and Run Docker Container
+name: Docker Image CI
 
 on:
   push:
+    branches:
+      - main
+  pull_request:
     branches:
       - main
 
@@ -10,32 +13,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    - name: Build Docker image
-      run: docker build -t my-python-app .
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
 
-    - name: Run Docker container
-      run: docker run -d -p 5000:5000 --name my-python-app-container my-python-app
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
 
-    - name: Wait for the container to be ready
-      run: |
-        echo "Waiting for the server to start..."
-        sleep 10
+      - name: Build and push Docker image
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: my-image:latest
 
-    - name: Check Docker container status
-      run: docker ps -a
+      - name: Run container
+        run: docker run -d -p 5000:5000 my-image:latest
 
-    - name: Check Docker container logs
-      run: docker logs my-python-app-container
+      - name: Wait for the server to start
+        run: |
+          echo "Waiting for the server to start..."
+          sleep 15
+          curl -v http://localhost:5000
 
-    - name: Test application
-      run: |
-        echo "Testing the application"
-        curl -v http://localhost:5000
+      - name: Stop container
+        run: docker stop $(docker ps -q)
 
-    - name: Stop and remove Docker container
-      run: docker rm -f my-python-app-container
 
 
