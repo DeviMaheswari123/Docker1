@@ -17,10 +17,20 @@ jobs:
       run: docker build -t my-python-app .
 
     - name: Run Docker container
-      run: docker run -d -p 5000:5000 my-python-app
+      run: docker run -d -p 5000:5000 --name my-python-app-container my-python-app
 
-    - name: Test application
+    - name: Wait for the container to be ready
       run: |
         echo "Waiting for the server to start..."
         sleep 10
+
+    - name: Check Docker container logs
+      run: docker logs my-python-app-container
+
+    - name: Test application
+      run: |
         curl -v http://localhost:5000
+
+    - name: Stop and remove Docker container
+      run: docker rm -f my-python-app-container
+
